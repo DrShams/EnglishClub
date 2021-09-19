@@ -13,7 +13,6 @@ options = webdriver.ChromeOptions()
 options.add_argument('ignore-certificate-errors')
 path = "chromedriver.exe"
 
-
 #STEP 1 GRABBING
 def firststep():
     driver = webdriver.Chrome(path,options=options)
