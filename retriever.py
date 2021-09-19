@@ -67,7 +67,6 @@ def secondstep():
     driver.get(url)
 #    driver.close()
 
-
 def main():
     """ Пример загрузки фото """
 
