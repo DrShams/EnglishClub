@@ -9,19 +9,46 @@ from selenium.webdriver.common.keys import Keys
 import time
 import requests
 
-options = webdriver.ChromeOptions()
-options.add_argument('ignore-certificate-errors')
-path = "chromedriver.exe"
 
+#EXPERIMENTAL BLOCK
+from io import StringIO
+from PIL import Image
+#import shutil
+
+import json
+
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument("--disable-webgl")
+options.add_experimental_option("excludeSwitches", ["enable-logging"])
+path = r'chromedriver.exe'
+global driver
+driver = webdriver.Chrome(path,options=options)
+
+import sqlite3
+conn = sqlite3.connect('dict.sqlite',check_same_thread=False)
+cur = conn.cursor()
+cur.execute('''
+CREATE TABLE IF NOT EXISTS "Dictionary"(
+'id' INTEGER,
+'word' TEXT,
+'path' TEXT,
+'one' TEXT,
+'two' TEXT,
+'three' TEXT,
+PRIMARY KEY("id" AUTOINCREMENT));'''
+)
 #STEP 1 GRABBING
 def firststep():
-    driver = webdriver.Chrome(path,options=options)
     url = "https://www.palabrasaleatorias.com/random-words.php"
+    print("fync has been executed[1]")
     driver.get(url)
+    print("fync has been executed[2]")
     driver.implicitly_wait(3) # seconds
     rez = driver.find_element(By.XPATH, "//td/div")
     global word
     word = rez.text.lower()
+    #driver.quit()
 
     url = "https://www.google.ru/imghp?hl=ru"
     driver.get(url)
@@ -35,7 +62,6 @@ def firststep():
     time.sleep(2)
     elems = driver.find_elements(By.XPATH, ".//div[@id='Sva75c']//a/img")
     for elem in elems:
-        #print(elem)
         picture_url = elem.get_attribute("src")
         print("picture has url: \n",picture_url)
         if '.jpg' in picture_url:
@@ -46,69 +72,109 @@ def firststep():
             format = 'png'
         else:
             print("there is no valid picture for the word",word)
-            driver.close()
-            return False
+            #driver.close()
+            return firststep()
         break
-    r = requests.get(picture_url, allow_redirects=True)
     print(word,".",format)
-    global name
-    name = 'pictures/' + word + "." + format
-    open(name, 'wb').write(r.content)
-    driver.close()
+    global path_pic
+    path_pic = 'pictures/' + word + "." + format
+    #EXPERIMENTAL BLOCK
+    getImage(picture_url)
+    try:
+        getImage(picture_url)
+    except:
+        print("[x]problem with connection")
+    #finally:
+        #print("[x]First step was sucessefully passed")
+        #driver.close()
+        #return word,path_pic
 
+#
+def getImage(url, name=None):
+    #file = createFilename(url, name)
+    with open(path_pic, 'wb') as f:
+        r = requests.get(url, stream=True)
+        for block in r.iter_content(1024):
+            if not block:
+                break
+            f.write(block)
 #STEP 2 VK
+#
 import time
 import vk_api
-
 def secondstep():
-    driver = webdriver.Chrome(path,options=options)
     url = "https://dictionary.cambridge.org/dictionary/english/" + word
     print(url)
     driver.get(url)
-#    driver.close()
-
-def main():
-    """ Пример загрузки фото """
-
-    login, password = '79656559552', 'Xa5xv9958!@'
-    vk_session = vk_api.VkApi(login, password)
-
-    try:
-        vk_session.auth(token_only=True)
-    except vk_api.AuthError as error_msg:
-        print(error_msg)
-        return
-
-    """ В VkUpload реализованы методы загрузки файлов в ВК
-    """
-
-    upload = vk_api.VkUpload(vk_session)
-    print(name)
-    photo = upload.photo(
-
-        name,
-        album_id=279409061,
-        group_id=''
-    )
-
-    vk_photo_url = 'https://vk.com/photo{}_{}'.format(
-        photo[0]['owner_id'], photo[0]['id']
-    )
-
-    print(photo, '\nLink: ', vk_photo_url)
-
-    photourl = 'photo' + str(photo[0]['owner_id']) + '_' + str(photo[0]['id'])
-    print(photourl)
-    vk = vk_session.get_api()
-    print(vk.wall.post(attachments = photourl,message=word))
-
-if __name__ == '__main__':
-    #firststep()
-    if firststep() is False:
-        #rint("no valid")
-        firststep()
+    wdefs = driver.find_elements(By.CLASS_NAME,"def-block")
+    count = 0
+    if len(wdefs) > 1:
+        print("definitions of the word:",word)
     else:
-        #print("True valid")
+        print("definition of the word:",word)
+    wordlist = list()
+    deflist = list()
+    for wdef in wdefs:
+        if count == 3: break
+        count += 1
+        try:
+            title = wdef.find_element(By.CSS_SELECTOR,".def.ddef_d")
+        except:
+            print("[x] The is no title element")
+            continue
+        try:
+            titledef = wdef.find_element(By.CLASS_path_pic,"eg")
+            titledeftext = titledef.text
+        except:
+            titledeftext = None
+        symbol = str(title.text)[-1:]
+        if symbol == ':':
+            title_fmt = str(title.text)[:-1]
+        else:
+            title_fmt = str(title.text)
+
+        if titledeftext is not None:
+            deflist.append(title_fmt+titledeftext)
+            print("["+str(count)+"]",title_fmt,titledeftext)
+        else:
+            deflist.append(title_fmt)
+            print("["+str(count)+"]",title_fmt)
+
+    one = two = three = None
+    words = len(deflist)
+    if words == 1:
+        one = deflist[0]
+    elif words == 2:
+        one = deflist[0]
+        two = deflist[1]
+    elif words == 3:
+        one = deflist[0]
+        two = deflist[1]
+        three = deflist[2]
+    else:
+        print("there is no words")
+
+    cur.execute('SELECT id FROM Dictionary WHERE word = ?',(word,))
+    print('[Step]1')
+    row = cur.fetchone()
+    print('[Step]2')
+    conn.commit()
+    if row is None:
+        cur.execute('INSERT INTO Dictionary (word, path, one, two, three) VALUES (?, ?, ?, ?, ?)',
+        (word, path_pic, one, two, three))
+        conn.commit()
+        print('-[Step]3')
+    else:
+        print('+[Step]3')
+        id = row[0]
+        print('[Step]4')
+        print(word, "is already in the database with id=",id)
+
+def exfunction(num = 1):
+    for wordcount in range(num):
+        print("word #",wordcount+1)
+        firststep()
         secondstep()
-    #else:
-        #main()
+        #return word
+if __name__ == '__main__':
+    exfunction()
