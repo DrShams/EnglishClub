@@ -1,3 +1,5 @@
+import sqlite3
+import requests
 from selenium.common.exceptions import *
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -5,28 +7,25 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver import Firefox
+
+
+import vk_api
 
 import time
-import requests
-
-
-#EXPERIMENTAL BLOCK
+import os
 from io import StringIO
 from PIL import Image
-#import shutil
 
-import json
+#options = webdriver.ChromeOptions()
+#options.add_argument('--ignore-certificate-errors')
+#options.add_argument("--disable-webgl")
+#options.add_experimental_option("excludeSwitches", ["enable-logging"])
+path = os.path.abspath("files/")
+os.environ["PATH"] += os.pathsep + path
 
-options = webdriver.ChromeOptions()
-options.add_argument('--ignore-certificate-errors')
-options.add_argument("--disable-webgl")
-options.add_experimental_option("excludeSwitches", ["enable-logging"])
-path = r'chromedriver.exe'
-global driver
-driver = webdriver.Chrome(path,options=options)
 
-import sqlite3
-conn = sqlite3.connect('dict.sqlite',check_same_thread=False)
+conn = sqlite3.connect('files/dict.sqlite',check_same_thread=False)
 cur = conn.cursor()
 cur.execute('''
 CREATE TABLE IF NOT EXISTS "Dictionary"(
@@ -73,11 +72,12 @@ def firststep():
         else:
             print("there is no valid picture for the word",word)
             #driver.close()
-            return firststep()
+            firststep()
+            return True
         break
     print(word,".",format)
     global path_pic
-    path_pic = 'pictures/' + word + "." + format
+    path_pic = 'files/pictures/' + word + "." + format
     #EXPERIMENTAL BLOCK
     getImage(picture_url)
     try:
@@ -99,9 +99,6 @@ def getImage(url, name=None):
                 break
             f.write(block)
 #STEP 2 VK
-#
-import time
-import vk_api
 def secondstep():
     url = "https://dictionary.cambridge.org/dictionary/english/" + word
     print(url)
@@ -155,26 +152,25 @@ def secondstep():
         print("there is no words")
 
     cur.execute('SELECT id FROM Dictionary WHERE word = ?',(word,))
-    print('[Step]1')
-    row = cur.fetchone()
-    print('[Step]2')
+    row = cur.fetchone()#fix this func
     conn.commit()
     if row is None:
         cur.execute('INSERT INTO Dictionary (word, path, one, two, three) VALUES (?, ?, ?, ?, ?)',
         (word, path_pic, one, two, three))
         conn.commit()
-        print('-[Step]3')
     else:
-        print('+[Step]3')
         id = row[0]
-        print('[Step]4')
         print(word, "is already in the database with id=",id)
 
 def exfunction(num = 1):
+    global driver
+    #driver = webdriver.Chrome(path,options=options)
+    driver = Firefox()
     for wordcount in range(num):
         print("word #",wordcount+1)
         firststep()
         secondstep()
-        #return word
+    driver.close()
+
 if __name__ == '__main__':
     exfunction()

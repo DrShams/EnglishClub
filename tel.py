@@ -1,19 +1,24 @@
-import time
+import telebot
+from telebot import types
+
 import vk_api
 import os
+import re
 import sqlite3
-conn = sqlite3.connect('dict.sqlite',check_same_thread=False)
-cur = conn.cursor()
-
 import urllib.request, urllib.parse, urllib.error
-import json
 
-import telebot
+import time
+
+import sys
+sys.path.insert(0, r'C:\Users')#path where config.py file stores
 import config
+
 from retriever import exfunction
 
-from telebot import types
-import re
+conn = sqlite3.connect('files/dict.sqlite',check_same_thread=False)
+cur = conn.cursor()
+
+bot = telebot.TeleBot(config.TOKEN)
 
 def generatewords(message,title):
 	markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -24,6 +29,9 @@ def generatewords(message,title):
 	markup.add(item1, item2, item3, item4)
 	bot.send_message(message.chat.id, title.format(message.from_user),
 		parse_mode='html', reply_markup=markup)
+
+
+
 def deletefunc(message,title):
 	sqlstr = '''
 	DELETE FROM Dictionary WHERE word = ?
@@ -45,7 +53,8 @@ def deletefunc(message,title):
 	bot.send_message(message.chat.id, title.format(message.from_user),
 		parse_mode='html', reply_markup=markup)
 
-bot = telebot.TeleBot(config.TOKEN)
+
+
 @bot.message_handler(commands=['start'])
 def welcome(message):
 
@@ -56,9 +65,9 @@ def welcome(message):
 	markup.add(item1, item2)
 	bot.send_message(message.chat.id, "Welcome, {0.first_name}, What do you want?".format(message.from_user),
 		parse_mode='html', reply_markup=markup)
-	#BITCOIN COURSE
-	#bot.send_message(message.chat.id, mess)
-	#
+
+
+
 @bot.message_handler(content_types=['text'])
 def lalala(message):
 	if message.chat.type == 'private':
@@ -106,8 +115,7 @@ def lalala(message):
 
 		elif message.text == 'Publish':
 			bot.send_message(message.chat.id, "...loading")
-			login, password = '79656559552', 'Xa5xv9958!@'
-			vk_session = vk_api.VkApi(login, password)
+			vk_session = vk_api.VkApi(config.LOGIN, config.PASSWORD)
 			try:
 				vk_session.auth(token_only=True)
 			except vk_api.AuthError as error_msg:
@@ -157,26 +165,6 @@ def lalala(message):
 			parse_mode='html', reply_markup=markup)
 		else:
 			bot.send_message(message.chat.id, "I don't know what to answer ")
-
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-	try:
-		if call.message:
-			if call.data == 'good':
-				bot.send_message(call.message.chat.id, 'Вот и отличненько 😊')
-			elif call.data == 'bad':
-				bot.send_message(call.message.chat.id, 'Бывает 😢')
-
-			# remove inline buttons
-			bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="😊 Как дела?",
-				reply_markup=None)
-
-			# show alert
-			bot.answer_callback_query(callback_query_id=call.id, show_alert=False,
-				text="ЭТО ТЕСТОВОЕ УВЕДОМЛЕНИЕ!!11")
-
-	except Exception as e:
-		print(repr(e))
 
 # RUN
 bot.polling(none_stop=True)
