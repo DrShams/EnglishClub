@@ -17,10 +17,6 @@ import os
 from io import StringIO
 from PIL import Image
 
-#options = webdriver.ChromeOptions()
-#options.add_argument('--ignore-certificate-errors')
-#options.add_argument("--disable-webgl")
-#options.add_experimental_option("excludeSwitches", ["enable-logging"])
 path = os.path.abspath("files/")
 os.environ["PATH"] += os.pathsep + path
 
@@ -78,8 +74,6 @@ def firststep():
     print(word,".",format)
     global path_pic
     path_pic = 'files/pictures/' + word + "." + format
-    #EXPERIMENTAL BLOCK
-    getImage(picture_url)
     try:
         getImage(picture_url)
     except:
@@ -162,9 +156,8 @@ def secondstep():
         id = row[0]
         print(word, "is already in the database with id=",id)
 
-def exfunction(num = 1):
+def exfunction(num = 1000):
     global driver
-    #driver = webdriver.Chrome(path,options=options)
     driver = Firefox()
     for wordcount in range(num):
         print("word #",wordcount+1)
