@@ -20,19 +20,19 @@ from PIL import Image
 path = os.path.abspath("files/")
 os.environ["PATH"] += os.pathsep + path
 
-
 conn = sqlite3.connect('files/dict.sqlite',check_same_thread=False)
 cur = conn.cursor()
 cur.execute('''
-CREATE TABLE IF NOT EXISTS "Dictionary"(
-'id' INTEGER,
-'word' TEXT,
-'path' TEXT,
-'one' TEXT,
-'two' TEXT,
-'three' TEXT,
-PRIMARY KEY("id" AUTOINCREMENT));'''
+    CREATE TABLE IF NOT EXISTS "Dictionary"(
+    'id' INTEGER,
+    'word' TEXT,
+    'path' TEXT,
+    'one' TEXT,
+    'two' TEXT,
+    'three' TEXT,
+    PRIMARY KEY("id" AUTOINCREMENT));'''
 )
+
 #STEP 1 GRABBING
 def firststep():
     url = "https://www.palabrasaleatorias.com/random-words.php"
@@ -56,6 +56,11 @@ def firststep():
     rez.click()
     time.sleep(2)
     elems = driver.find_elements(By.XPATH, ".//div[@id='Sva75c']//a/img")
+    if len(elems) < 1:
+        print("there is no pictures at all",word)
+        #driver.close()
+        firststep()
+        return True
     for elem in elems:
         picture_url = elem.get_attribute("src")
         print("picture has url: \n",picture_url)
@@ -78,12 +83,7 @@ def firststep():
         getImage(picture_url)
     except:
         print("[x]problem with connection")
-    #finally:
-        #print("[x]First step was sucessefully passed")
-        #driver.close()
-        #return word,path_pic
 
-#
 def getImage(url, name=None):
     #file = createFilename(url, name)
     with open(path_pic, 'wb') as f:
