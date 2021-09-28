@@ -1,6 +1,7 @@
 pip install -U vk_api
 pip install pyTelegramBotAPI
 pip install pillow
+pip install beautifulsoup4
 
 #put config.py file in 'C:\Users' directory with the next content
 TOKEN = 'yourtokenfor telegram'

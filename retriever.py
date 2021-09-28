@@ -1,10 +1,11 @@
 import sqlite3
 import requests
+from bs4 import BeautifulSoup
 from selenium.common.exceptions import *
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
+#from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import Firefox
@@ -36,13 +37,12 @@ cur.execute('''
 #STEP 1 GRABBING
 def firststep():
     url = "https://www.palabrasaleatorias.com/random-words.php"
-    print("fync has been executed[1]")
-    driver.get(url)
-    print("fync has been executed[2]")
-    driver.implicitly_wait(3) # seconds
-    rez = driver.find_element(By.XPATH, "//td/div")
+    page = requests.get(url)
+    soup = BeautifulSoup(page.text, "html.parser")
+    block = soup.find_all("div")[1]#get second div
     global word
-    word = rez.text.lower()
+    word = str(block.text.strip())
+
     #driver.quit()
 
     url = "https://www.google.ru/imghp?hl=ru"
