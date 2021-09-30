@@ -1,8 +1,4 @@
-import requests
-from bs4 import BeautifulSoup
+a = [1,2,3,4,5,6,7,8,9]
+a[::2] = 10,20,30,40,50
 
-url = "https://www.palabrasaleatorias.com/random-words.php"
-page = requests.get(url)
-soup = BeautifulSoup(page.text, "html.parser")
-block = soup.find_all("div")[1]#get second div
-x = str(block.text.strip()))
+print(a)
