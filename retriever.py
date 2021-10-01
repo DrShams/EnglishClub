@@ -10,9 +10,6 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import Firefox
 
-
-import vk_api
-
 import time
 import os
 from io import StringIO
