@@ -5,7 +5,7 @@ import vk_api
 import os
 import re
 import sqlite3
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
 
 import time
 

@@ -1,19 +1,13 @@
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver import Firefox
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+
 import sqlite3
 import requests
-from bs4 import BeautifulSoup
-from selenium.common.exceptions import *
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-#from selenium.webdriver.common.action_chains import ActionChains
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver import Firefox
-
 import time
 import os
-from io import StringIO
-from PIL import Image
 
 path = os.path.abspath("files/")
 os.environ["PATH"] += os.pathsep + path
@@ -30,32 +24,28 @@ cur.execute('''
     'three' TEXT,
     PRIMARY KEY("id" AUTOINCREMENT));'''
 )
-
 #STEP 1 GRABBING
 def firststep():
     url = "https://www.palabrasaleatorias.com/random-words.php"
     page = requests.get(url)
     soup = BeautifulSoup(page.text, "html.parser")
-    block = soup.find_all("div")[1]#get second div
+    block = soup.find_all("div")[1] #get second div
     global word
     word = str(block.text.strip())
 
-    #driver.quit()
-
     url = "https://www.google.ru/imghp?hl=ru"
     driver.get(url)
-    driver.implicitly_wait(3) # seconds
-    rez = driver.find_element(By.XPATH, "//input")
-    rez.send_keys(word)
-    rez.send_keys(Keys.ENTER)
+    driver.implicitly_wait(3) #seconds
+    elem = driver.find_element(By.XPATH, "//input")
+    elem.send_keys(word)
+    elem.send_keys(Keys.ENTER)
 
-    rez = driver.find_element(By.XPATH, "//*[@id='islrg']//img")
-    rez.click()
+    elem = driver.find_element(By.XPATH, "//*[@id='islrg']//img")
+    elem.click()
     time.sleep(2)
     elems = driver.find_elements(By.XPATH, ".//div[@id='Sva75c']//a/img")
     if len(elems) < 1:
         print("there is no pictures at all",word)
-        #driver.close()
         firststep()
         return True
     for elem in elems:
@@ -69,7 +59,6 @@ def firststep():
             format = 'png'
         else:
             print("there is no valid picture for the word",word)
-            #driver.close()
             firststep()
             return True
         break
@@ -77,18 +66,15 @@ def firststep():
     global path_pic
     path_pic = 'files/pictures/' + word + "." + format
     try:
-        getImage(picture_url)
+        with open(path_pic, 'wb') as f:
+            r = requests.get(picture_url, stream=True)
+            for block in r.iter_content(1024):
+                if not block:
+                    break
+                f.write(block)
     except:
         print("[x]problem with connection")
 
-def getImage(url, name=None):
-    #file = createFilename(url, name)
-    with open(path_pic, 'wb') as f:
-        r = requests.get(url, stream=True)
-        for block in r.iter_content(1024):
-            if not block:
-                break
-            f.write(block)
 #STEP 2 VK
 def secondstep():
     url = "https://dictionary.cambridge.org/dictionary/english/" + word
