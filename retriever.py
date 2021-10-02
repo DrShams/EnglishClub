@@ -43,12 +43,12 @@ def firststep():
     elem = driver.find_element(By.XPATH, "//*[@id='islrg']//img")
     elem.click()
     time.sleep(2)
-    elems = driver.find_elements(By.XPATH, ".//div[@id='Sva75c']//a/img")
-    if len(elems) < 1:
+    pictures = driver.find_elements(By.XPATH, ".//div[@id='Sva75c']//a/img")
+    if len(pictures) < 1:
         print("there is no pictures at all",word)
         firststep()
         return True
-    for elem in elems:
+    for elem in pictures:
         picture_url = elem.get_attribute("src")
         print("picture has url: \n",picture_url)
         if '.jpg' in picture_url:
